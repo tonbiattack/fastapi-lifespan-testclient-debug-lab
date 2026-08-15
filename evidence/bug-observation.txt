@@ -1,0 +1,4 @@
+before TestClient: catalog loaded = False
+response status: 503
+response body: {'detail': 'catalog is not initialized; lifespan has not started'}
+after request: catalog loaded = False

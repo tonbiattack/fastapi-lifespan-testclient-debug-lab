@@ -1,0 +1,25 @@
+F.                                                                       [100%]
+=================================== FAILURES ===================================
+________________ test_health_endpoint_uses_initialized_catalog _________________
+
+    def test_health_endpoint_uses_initialized_catalog() -> None:
+        """ヘルスチェックは、起動済みアプリの共有カタログを利用できる。"""
+        assert catalog_is_loaded() is False
+    
+        client = TestClient(app)
+        response = client.get("/health")
+    
+>       assert response.status_code == 200
+E       assert 503 == 200
+E        +  where 503 = <Response [503 Service Unavailable]>.status_code
+
+tests/test_health.py:15: AssertionError
+=============================== warnings summary ===============================
+../../../../usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1
+  /usr/local/lib/python3.12/dist-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_health.py::test_health_endpoint_uses_initialized_catalog - ...
+1 failed, 1 passed, 1 warning in 0.90s
