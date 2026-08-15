@@ -1,0 +1,5 @@
+before TestClient: catalog loaded = False
+inside TestClient: catalog loaded = True
+response status: 200
+response body: {'status': 'ready', 'catalog_release': '2026.08'}
+after TestClient: catalog loaded = False

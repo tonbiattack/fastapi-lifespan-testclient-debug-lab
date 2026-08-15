@@ -9,14 +9,18 @@ def test_health_endpoint_uses_initialized_catalog() -> None:
     """ヘルスチェックは、起動済みアプリの共有カタログを利用できる。"""
     assert catalog_is_loaded() is False
 
-    client = TestClient(app)
-    response = client.get("/health")
+    with TestClient(app) as client:
+        assert catalog_is_loaded() is True
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "ready",
-        "catalog_release": "2026.08",
-    }
+        response = client.get("/health")
+
+        assert response.status_code == 200
+        assert response.json() == {
+            "status": "ready",
+            "catalog_release": "2026.08",
+        }
+
+    assert catalog_is_loaded() is False
 
 
 def test_catalog_is_not_initialized_before_app_start() -> None:

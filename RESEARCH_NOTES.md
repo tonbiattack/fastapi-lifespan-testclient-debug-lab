@@ -39,3 +39,43 @@
 | C. `with TestClient` がlifespan境界である | with内で `200`、with後に未初期化 | withの内外で状態を観測する | 期待どおりなら採用 |
 
 作成日: 2026-08-15
+
+## 実測結果（Python 3.12.3 / FastAPI 0.141.1）
+
+`python3 observe.py` は次を出力した。
+
+```text
+before TestClient: catalog loaded = False
+response status: 503
+response body: {'detail': 'catalog is not initialized; lifespan has not started'}
+after request: catalog loaded = False
+```
+
+`python3 -m pytest tests/test_health.py -q` は、`test_health_endpoint_uses_initialized_catalog` のみが `assert 503 == 200` で失敗し、テスト開始時にカタログが未初期化である対照ケースは成功した。
+
+| 仮説 | 予測 | 実測 | 判定 |
+| --- | --- | --- | --- |
+| A. ルート実装の不備 | withを使っても `503` | 次段階で確認 | 保留 |
+| B. 単独の`TestClient`生成でもlifespanが開始する | 単独生成で `200` | `503` | 棄却 |
+| C. `with TestClient` がlifespan境界である | with内で `200`、外では未初期化 | 次段階で確認 | 保留 |
+
+不具合状態コミット: `b175390 test: reproduce missing FastAPI lifespan in TestClient`
+
+## 修正と回帰確認
+
+最小修正は、テストと観測コードの `TestClient(app)` を次のようにコンテキストマネージャ化することだった。
+
+```python
+with TestClient(app) as client:
+    response = client.get("/health")
+```
+
+修正後の観測では、withブロックの前はカタログ未初期化、内部では初期化済み、終了後は再び未初期化となった。`/health` は `200` と `{"status": "ready", "catalog_release": "2026.08"}` を返した。全テストは **2 passed** で成功した。
+
+| 仮説 | 実測 | 判定 |
+| --- | --- | --- |
+| A. ルート実装の不備 | with内では `200` | 棄却 |
+| B. 単独の`TestClient`生成でもlifespanが開始する | 単独生成では `503` | 棄却 |
+| C. `with TestClient` がlifespan境界である | with内で初期化、終了後に後始末 | 採用 |
+
+修正コミット: `ad1d1a1 fix: run FastAPI lifespan with TestClient context`

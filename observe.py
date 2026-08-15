@@ -6,9 +6,9 @@ from app.main import app, catalog_is_loaded
 
 
 print(f"before TestClient: catalog loaded = {catalog_is_loaded()}")
-client = TestClient(app)
-response = client.get("/health")
-print(f"response status: {response.status_code}")
-print(f"response body: {response.json()}")
-print(f"after request: catalog loaded = {catalog_is_loaded()}")
-client.close()
+with TestClient(app) as client:
+    print(f"inside TestClient: catalog loaded = {catalog_is_loaded()}")
+    response = client.get("/health")
+    print(f"response status: {response.status_code}")
+    print(f"response body: {response.json()}")
+print(f"after TestClient: catalog loaded = {catalog_is_loaded()}")
